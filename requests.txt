@@ -1,0 +1,479 @@
+1st Request
+
+Header:-
+
+Request URL
+https://www.facebook.com/privacy_sandbox/pixel/register/trigger/?id=244515255721278&ev=SubscribedButtonClick&dl=https%3A%2F%2Ftestbook.com%2Freferrals&rl=https%3A%2F%2Ftestbook.com%2Fpass%2Fmy%3Ftab%3DpassPro&if=false&ts=1761994059225&cd[buttonFeatures]=%7B%22classList%22%3A%22btn%20btn-success%22%2C%22destination%22%3A%22%22%2C%22id%22%3A%22%22%2C%22imageUrl%22%3A%22%22%2C%22innerText%22%3A%22Invite%22%2C%22numChildButtons%22%3A0%2C%22tag%22%3A%22button%22%2C%22type%22%3A%22button%22%2C%22name%22%3A%22%22%2C%22value%22%3A%22%22%7D&cd[buttonText]=Invite&cd[formFeatures]=%5B%5D&cd[pageFeatures]=%7B%22title%22%3A%22Testbook%20Referrals%20%7C%20More%20you%20refer%2C%20More%20the%20chances%20to%20Win%22%7D&cd[parameters]=%5B%5D&sw=1366&sh=768&cud[em]=***%40****.***&cudff[em]=*******%23%23%23%23%23%40*****.***&cudff[fn]=%5E***%5E**&cudff[ln]=&ncud[em]=***%40****.***&ud[em]=8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5&aud[em]=8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5&ncudff[em]=*******%23%23%23%23%23%40*****.***&udff[em]=0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f&ncudff[fn]=*******&udff[fn]=f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547&audff[em]=0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f&audff[fn]=f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547&v=2.9.239&r=stable&a=tmgoogletagmanager&ec=2&o=6174&fbp=fb.1.1755771246949.80718109354156818&cs_est=true&ler=empty&cdl=API_unavailable&pmd[description]=Testbook%20Referrals%20work%20when%20you%20invite%20your%20Friends%20with%20referral%20code%20%26%20your%20friends%20join%20Testbook.%20You%20win%20Prizes%20%26%20Cashback%2C%20whereas%20your%20friends%20get%20a%20Discount.&pmd[contents]=%5B%7B%22name%22%3A%22Testbook%20Referrals%20%7C%20More%20you%20refer%2C%20More%20the%20chances%20to%20Win%22%2C%22description%22%3A%22Testbook%20Referrals%20work%20when%20you%20invite%20your%20Friends%20with%20referral%20code%20%26%20your%20friends%20join%20Testbook.%20You%20win%20Prizes%20%26%20Cashback%2C%20whereas%20your%20friends%20get%20a%20Discount.%22%7D%5D&plt=1864.9000000059605&it=1761992716280&coo=false&es=automatic&tm=3&expv2[0]=pl1&expv2[1]=el3&expv2[2]=bc1&rqm=FGET
+Request Method
+GET
+Status Code
+200 OK
+Remote Address
+[2a03:2880:f16b:81:face:b00c:0:25de]:443
+Referrer Policy
+strict-origin-when-cross-origin
+alt-svc
+h3=":443"; ma=86400
+attribution-reporting-register-trigger
+{"event_trigger_data":[{"trigger_data":"0"}],"aggregatable_trigger_data":[],"aggregatable_values":{},"aggregatable_source_registration_time":"exclude","filters":{"3":["5461873370542621"]},"debug_reporting":true,"debug_key":"678502182573123323"}
+cache-control
+private, no-store, no-cache, must-revalidate
+content-encoding
+zstd
+content-security-policy
+default-src blob: 'self' https://*.fbsbx.com *.facebook.com *.fbcdn.net;script-src *.facebook.com *.fbcdn.net *.facebook.net 127.0.0.1:* 'nonce-g0h335Dv' blob: 'self' connect.facebook.net 'wasm-unsafe-eval' https://*.google-analytics.com *.google.com;style-src *.fbcdn.net data: *.facebook.com 'unsafe-inline' https://fonts.googleapis.com;connect-src *.facebook.com facebook.com *.fbcdn.net *.facebook.net wss://*.facebook.com:* wss://*.whatsapp.com:* wss://*.fbcdn.net attachment.fbsbx.com ws://localhost:* blob: *.cdninstagram.com 'self' http://localhost:3103 wss://gateway.facebook.com wss://edge-chat.facebook.com wss://snaptu-d.facebook.com wss://kaios-d.facebook.com/ v.whatsapp.net *.fbsbx.com *.fb.com https://*.google-analytics.com;font-src data: *.facebook.com *.fbcdn.net *.fbsbx.com https://fonts.gstatic.com;img-src *.fbcdn.net *.facebook.com data: https://*.fbsbx.com facebook.com *.cdninstagram.com fbsbx.com fbcdn.net connect.facebook.net *.carriersignal.info blob: android-webview-video-poster: *.whatsapp.net *.fb.com *.oculuscdn.com *.tenor.co *.tenor.com *.giphy.com https://trustly.one/ https://*.trustly.one/ https://paywithmybank.com/ https://*.paywithmybank.com/ https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.google-analytics.com;media-src *.cdninstagram.com blob: *.fbcdn.net *.fbsbx.com www.facebook.com *.facebook.com data: *.tenor.co *.tenor.com https://*.giphy.com;child-src data: blob: 'self' https://*.fbsbx.com *.facebook.com *.fbcdn.net;frame-src *.facebook.com *.fbsbx.com fbsbx.com data: www.instagram.com *.fbcdn.net accounts.meta.com *.accounts.meta.com https://trustly.one/ https://*.trustly.one/ https://paywithmybank.com/ https://*.paywithmybank.com/ https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://td.doubleclick.net *.google.com *.doubleclick.net;manifest-src data: blob: 'self' https://*.fbsbx.com *.facebook.com *.fbcdn.net;object-src data: blob: 'self' https://*.fbsbx.com *.facebook.com *.fbcdn.net;worker-src blob: *.facebook.com data:;block-all-mixed-content;upgrade-insecure-requests;
+content-type
+image/png
+cross-origin-opener-policy
+same-origin-allow-popups
+cross-origin-resource-policy
+cross-origin
+date
+Sat, 01 Nov 2025 10:47:36 GMT
+document-policy
+force-load-at-top
+document-policy
+include-js-call-stacks-in-crash-reports
+expires
+Sat, 01 Jan 2000 00:00:00 GMT
+origin-agent-cluster
+?1
+permissions-policy
+accelerometer=(), attribution-reporting=(self), autoplay=(), bluetooth=(), browsing-topics=(self), camera=(self), ch-device-memory=(), ch-downlink=(), ch-dpr=(), ch-ect=(), ch-rtt=(), ch-save-data=(), ch-ua-arch=(), ch-ua-bitness=(), ch-viewport-height=(), ch-viewport-width=(), ch-width=(), clipboard-read=(self), clipboard-write=(self), compute-pressure=(), display-capture=(self), encrypted-media=(self), fullscreen=(self), gamepad=*, geolocation=(self), gyroscope=(), hid=(), idle-detection=(), interest-cohort=(self), keyboard-map=(), local-fonts=(), magnetometer=(), microphone=(self), midi=(), otp-credentials=(), payment=(), picture-in-picture=(self), private-state-token-issuance=(), publickey-credentials-get=(self), screen-wake-lock=(), serial=(), shared-storage=(), shared-storage-select-url=(), private-state-token-redemption=(), usb=(), unload=(self), window-management=(), xr-spatial-tracking=(self);report-to="permissions_policy"
+pragma
+no-cache
+priority
+u=3,i
+report-to
+{"max_age":2592000,"endpoints":[{"url":"https:\/\/www.facebook.com\/browser_reporting\/coop\/?minimize=0"}],"group":"coop_report","include_subdomains":true}, {"max_age":259200,"endpoints":[{"url":"https:\/\/www.facebook.com\/ajax\/browser_error_reports\/?device_level=unknown&brsid=7567706846497119847&cpp=C3&cv=1029268283&st=1761994056209"}]}, {"max_age":21600,"endpoints":[{"url":"https:\/\/www.facebook.com\/ajax\/browser_error_reports\/"}],"group":"permissions_policy"}
+reporting-endpoints
+coop_report="https://www.facebook.com/browser_reporting/coop/?minimize=0", default="https://www.facebook.com/ajax/browser_error_reports/?device_level=unknown&brsid=7567706846497119847&cpp=C3&cv=1029268283&st=1761994056209", permissions_policy="https://www.facebook.com/ajax/browser_error_reports/"
+set-cookie
+ar_debug=1; path=/; domain=.facebook.com; secure; httponly; SameSite=None
+strict-transport-security
+max-age=15552000; preload
+vary
+Accept-Encoding
+x-content-type-options
+nosniff
+x-fb-connection-quality
+GOOD; q=0.7, rtt=123, rtx=0, c=24, mss=1232, tbw=5187, tp=15, tpl=0, uplat=322, ullat=0
+x-fb-debug
+jfCbjqu56lVu0j9QB3Vv/cEkiBx989iLYm4fO1jXx0IxE3ajhCaEpL3igt+YagOuEvxeZufNxTghNvGc2Ch4EQ==
+x-frame-options
+DENY
+x-xss-protection
+0
+:authority
+www.facebook.com
+:method
+GET
+:path
+/privacy_sandbox/pixel/register/trigger/?id=244515255721278&ev=SubscribedButtonClick&dl=https%3A%2F%2Ftestbook.com%2Freferrals&rl=https%3A%2F%2Ftestbook.com%2Fpass%2Fmy%3Ftab%3DpassPro&if=false&ts=1761994059225&cd[buttonFeatures]=%7B%22classList%22%3A%22btn%20btn-success%22%2C%22destination%22%3A%22%22%2C%22id%22%3A%22%22%2C%22imageUrl%22%3A%22%22%2C%22innerText%22%3A%22Invite%22%2C%22numChildButtons%22%3A0%2C%22tag%22%3A%22button%22%2C%22type%22%3A%22button%22%2C%22name%22%3A%22%22%2C%22value%22%3A%22%22%7D&cd[buttonText]=Invite&cd[formFeatures]=%5B%5D&cd[pageFeatures]=%7B%22title%22%3A%22Testbook%20Referrals%20%7C%20More%20you%20refer%2C%20More%20the%20chances%20to%20Win%22%7D&cd[parameters]=%5B%5D&sw=1366&sh=768&cud[em]=***%40****.***&cudff[em]=*******%23%23%23%23%23%40*****.***&cudff[fn]=%5E***%5E**&cudff[ln]=&ncud[em]=***%40****.***&ud[em]=8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5&aud[em]=8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5&ncudff[em]=*******%23%23%23%23%23%40*****.***&udff[em]=0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f&ncudff[fn]=*******&udff[fn]=f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547&audff[em]=0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f&audff[fn]=f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547&v=2.9.239&r=stable&a=tmgoogletagmanager&ec=2&o=6174&fbp=fb.1.1755771246949.80718109354156818&cs_est=true&ler=empty&cdl=API_unavailable&pmd[description]=Testbook%20Referrals%20work%20when%20you%20invite%20your%20Friends%20with%20referral%20code%20%26%20your%20friends%20join%20Testbook.%20You%20win%20Prizes%20%26%20Cashback%2C%20whereas%20your%20friends%20get%20a%20Discount.&pmd[contents]=%5B%7B%22name%22%3A%22Testbook%20Referrals%20%7C%20More%20you%20refer%2C%20More%20the%20chances%20to%20Win%22%2C%22description%22%3A%22Testbook%20Referrals%20work%20when%20you%20invite%20your%20Friends%20with%20referral%20code%20%26%20your%20friends%20join%20Testbook.%20You%20win%20Prizes%20%26%20Cashback%2C%20whereas%20your%20friends%20get%20a%20Discount.%22%7D%5D&plt=1864.9000000059605&it=1761992716280&coo=false&es=automatic&tm=3&expv2[0]=pl1&expv2[1]=el3&expv2[2]=bc1&rqm=FGET
+:scheme
+https
+accept
+image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+accept-encoding
+gzip, deflate, br, zstd
+accept-language
+en,en-US;q=0.9,hi;q=0.8,gu;q=0.7,ne;q=0.6
+attribution-reporting-eligible
+event-source, trigger=navigation-source
+attribution-reporting-support
+web
+cookie
+datr=W8-maPBmCiIHm0X2LByCibcw; sb=W8-maEW9YUdpXkgxD1jNqr__; ps_n=1; c_user=100051874180265; fr=1uIaXNtu0r3EYmu3P.AWfGNal4UzoC5l-VUPGEMpD70-iuzIETVvUOevM94sD8gkPVIFE.Bo_b82..AAA.0.0.Bo_b82.AWcTy7SQU8C1Aug4j2VevVfW-TY; xs=48%3A6QKXhzrryiG7zw%3A2%3A1755762610%3A-1%3A-1%3A%3AAcVZ84GtK7a6d_Vp7EXo6JgkUjb9JGIuDg9WkF26cKc; ar_debug=1
+priority
+i
+referer
+https://testbook.com/
+sec-ch-ua
+"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"
+sec-ch-ua-mobile
+?0
+sec-ch-ua-platform
+"Windows"
+sec-fetch-dest
+image
+sec-fetch-mode
+no-cors
+sec-fetch-site
+cross-site
+sec-fetch-storage-access
+active
+user-agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+
+Payload:-
+
+id
+244515255721278
+ev
+SubscribedButtonClick
+dl
+https://testbook.com/referrals
+rl
+https://testbook.com/pass/my?tab=passPro
+if
+false
+ts
+1761994059225
+cd[buttonFeatures]
+{"classList":"btn btn-success","destination":"","id":"","imageUrl":"","innerText":"Invite","numChildButtons":0,"tag":"button","type":"button","name":"","value":""}
+cd[buttonText]
+Invite
+cd[formFeatures]
+[]
+cd[pageFeatures]
+{"title":"Testbook Referrals | More you refer, More the chances to Win"}
+cd[parameters]
+[]
+sw
+1366
+sh
+768
+cud[em]
+***@****.***
+cudff[em]
+*******#####@*****.***
+cudff[fn]
+^***^**
+cudff[ln]
+ncud[em]
+***@****.***
+ud[em]
+8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5
+aud[em]
+8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5
+ncudff[em]
+*******#####@*****.***
+udff[em]
+0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f
+ncudff[fn]
+*******
+udff[fn]
+f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547
+audff[em]
+0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f
+audff[fn]
+f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547
+v
+2.9.239
+r
+stable
+a
+tmgoogletagmanager
+ec
+2
+o
+6174
+fbp
+fb.1.1755771246949.80718109354156818
+cs_est
+true
+ler
+empty
+cdl
+API_unavailable
+pmd[description]
+Testbook Referrals work when you invite your Friends with referral code & your friends join Testbook. You win Prizes & Cashback, whereas your friends get a Discount.
+pmd[contents]
+[{"name":"Testbook Referrals | More you refer, More the chances to Win","description":"Testbook Referrals work when you invite your Friends with referral code & your friends join Testbook. You win Prizes & Cashback, whereas your friends get a Discount."}]
+plt
+1864.9000000059605
+it
+1761992716280
+coo
+false
+es
+automatic
+tm
+3
+expv2[0]
+pl1
+expv2[1]
+el3
+expv2[2]
+bc1
+rqm
+FGET
+
+
+
+
+2nd Request
+
+Header:-
+
+Request URL
+https://api-new.testbook.com/api/v2/students/me/referrals/invite?auth_code=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3Rlc3Rib29rLmNvbSIsInN1YiI6IjYwMDljYjVlMzc0NjY4NWI4Njg3YWU1MCIsImF1ZCI6IlRCIiwiZXhwIjoiMjAyNS0xMi0wMVQwNjozOToyNy44MDY4MzY5MloiLCJpYXQiOiIyMDI1LTExLTAxVDA2OjM5OjI3LjgwNjgzNjkyWiIsIm5hbWUiOiJSdXBlc2ggS3VtYXIiLCJlbWFpbCI6InJ1cGVzaGs4NDgyMDNAZ21haWwuY29tIiwib3JnSWQiOiIiLCJpc0xNU1VzZXIiOmZhbHNlLCJyb2xlcyI6InN0dWRlbnQifQ.LujHVXOCTJdGlOL3_cR-VLtbdU3V3aXwH17CRHlgeqBo7PJZBkCXAw5vLQ384_1hxdJVWt2OVZsReb_sdAtfzN-X6TH70MkqMkkMQW7zocdULnHMN5lVu8b2KLl2Uuw4XH-qZ63IqgL1f5VbqOj3YhskRfrpaPMKBJSiujUtfvU&X-Tb-Client=web,1.2&language=Hindi
+Request Method
+POST
+Status Code
+200 OK
+Remote Address
+[64:ff9b::2208:9d31]:443
+Referrer Policy
+strict-origin-when-cross-origin
+access-control-allow-credentials
+true
+access-control-allow-origin
+https://testbook.com
+access-control-expose-headers
+API-Release-Version
+alt-svc
+h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+api-release-version
+v2.2.5.7.1-62-g04dc357
+content-encoding
+gzip
+content-length
+105
+content-type
+application/json
+date
+Sat, 01 Nov 2025 10:47:36 GMT
+vary
+Origin
+vary
+Accept-Encoding
+via
+1.1 google
+:authority
+api-new.testbook.com
+:method
+POST
+:path
+/api/v2/students/me/referrals/invite?auth_code=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3Rlc3Rib29rLmNvbSIsInN1YiI6IjYwMDljYjVlMzc0NjY4NWI4Njg3YWU1MCIsImF1ZCI6IlRCIiwiZXhwIjoiMjAyNS0xMi0wMVQwNjozOToyNy44MDY4MzY5MloiLCJpYXQiOiIyMDI1LTExLTAxVDA2OjM5OjI3LjgwNjgzNjkyWiIsIm5hbWUiOiJSdXBlc2ggS3VtYXIiLCJlbWFpbCI6InJ1cGVzaGs4NDgyMDNAZ21haWwuY29tIiwib3JnSWQiOiIiLCJpc0xNU1VzZXIiOmZhbHNlLCJyb2xlcyI6InN0dWRlbnQifQ.LujHVXOCTJdGlOL3_cR-VLtbdU3V3aXwH17CRHlgeqBo7PJZBkCXAw5vLQ384_1hxdJVWt2OVZsReb_sdAtfzN-X6TH70MkqMkkMQW7zocdULnHMN5lVu8b2KLl2Uuw4XH-qZ63IqgL1f5VbqOj3YhskRfrpaPMKBJSiujUtfvU&X-Tb-Client=web,1.2&language=Hindi
+:scheme
+https
+accept
+application/json, text/plain, */*
+accept-encoding
+gzip, deflate, br, zstd
+accept-language
+en,en-US;q=0.9,hi;q=0.8,gu;q=0.7,ne;q=0.6
+content-length
+37
+content-type
+application/json;charset=UTF-8
+origin
+https://testbook.com
+priority
+u=1, i
+referer
+https://testbook.com/
+sec-ch-ua
+"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"
+sec-ch-ua-mobile
+?0
+sec-ch-ua-platform
+"Windows"
+sec-fetch-dest
+empty
+sec-fetch-mode
+cors
+sec-fetch-site
+same-site
+source
+testbook
+user-agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+
+
+
+Payload :- 
+
+auth_code
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3Rlc3Rib29rLmNvbSIsInN1YiI6IjYwMDljYjVlMzc0NjY4NWI4Njg3YWU1MCIsImF1ZCI6IlRCIiwiZXhwIjoiMjAyNS0xMi0wMVQwNjozOToyNy44MDY4MzY5MloiLCJpYXQiOiIyMDI1LTExLTAxVDA2OjM5OjI3LjgwNjgzNjkyWiIsIm5hbWUiOiJSdXBlc2ggS3VtYXIiLCJlbWFpbCI6InJ1cGVzaGs4NDgyMDNAZ21haWwuY29tIiwib3JnSWQiOiIiLCJpc0xNU1VzZXIiOmZhbHNlLCJyb2xlcyI6InN0dWRlbnQifQ.LujHVXOCTJdGlOL3_cR-VLtbdU3V3aXwH17CRHlgeqBo7PJZBkCXAw5vLQ384_1hxdJVWt2OVZsReb_sdAtfzN-X6TH70MkqMkkMQW7zocdULnHMN5lVu8b2KLl2Uuw4XH-qZ63IqgL1f5VbqOj3YhskRfrpaPMKBJSiujUtfvU
+X-Tb-Client
+web,1.2
+language
+Hindi
+{emails: ["rupeshk84820@gmail.com"]}
+emails
+: 
+["rupeshk84820@gmail.com"]
+
+
+3rd Request
+
+
+Header
+
+Request URL
+https://www.facebook.com/tr/
+Request Method
+POST
+Status Code
+200 OK
+Remote Address
+[2a03:2880:f16b:81:face:b00c:0:25de]:443
+Referrer Policy
+strict-origin-when-cross-origin
+access-control-allow-credentials
+true
+access-control-allow-origin
+https://testbook.com
+alt-svc
+h3=":443"; ma=86400
+content-length
+0
+content-type
+text/plain
+cross-origin-resource-policy
+cross-origin
+date
+Sat, 01 Nov 2025 10:47:36 GMT
+priority
+u=0,i
+server
+proxygen-bolt
+strict-transport-security
+max-age=31536000; includeSubDomains
+x-fb-connection-quality
+GOOD; q=0.7, rtt=102, rtx=0, c=21, mss=1232, tbw=2803, tp=9, tpl=0, uplat=3, ullat=3
+:authority
+www.facebook.com
+:method
+POST
+:path
+/tr/
+:scheme
+https
+accept
+text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+accept-encoding
+gzip, deflate, br, zstd
+accept-language
+en,en-US;q=0.9,hi;q=0.8,gu;q=0.7,ne;q=0.6
+cache-control
+max-age=0
+content-length
+2140
+content-type
+application/x-www-form-urlencoded
+cookie
+datr=W8-maPBmCiIHm0X2LByCibcw; sb=W8-maEW9YUdpXkgxD1jNqr__; ps_n=1; c_user=100051874180265; fr=1uIaXNtu0r3EYmu3P.AWfGNal4UzoC5l-VUPGEMpD70-iuzIETVvUOevM94sD8gkPVIFE.Bo_b82..AAA.0.0.Bo_b82.AWcTy7SQU8C1Aug4j2VevVfW-TY; xs=48%3A6QKXhzrryiG7zw%3A2%3A1755762610%3A-1%3A-1%3A%3AAcVZ84GtK7a6d_Vp7EXo6JgkUjb9JGIuDg9WkF26cKc; ar_debug=1
+origin
+https://testbook.com
+priority
+u=0, i
+referer
+https://testbook.com/
+sec-ch-ua
+"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"
+sec-ch-ua-mobile
+?0
+sec-ch-ua-platform
+"Windows"
+sec-fetch-dest
+iframe
+sec-fetch-mode
+navigate
+sec-fetch-site
+cross-site
+sec-fetch-storage-access
+active
+sec-fetch-user
+?1
+upgrade-insecure-requests
+1
+user-agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+
+Payload
+
+id
+244515255721278
+ev
+SubscribedButtonClick
+dl
+https://testbook.com/referrals
+rl
+https://testbook.com/pass/my?tab=passPro
+if
+false
+ts
+1761994059225
+cd[buttonFeatures]
+{"classList":"btn btn-success","destination":"","id":"","imageUrl":"","innerText":"Invite","numChildButtons":0,"tag":"button","type":"button","name":"","value":""}
+cd[buttonText]
+Invite
+cd[formFeatures]
+[]
+cd[pageFeatures]
+{"title":"Testbook Referrals | More you refer, More the chances to Win"}
+cd[parameters]
+[]
+sw
+1366
+sh
+768
+cud[em]
+***@****.***
+cudff[em]
+*******#####@*****.***
+cudff[fn]
+^***^**
+cudff[ln]
+ncud[em]
+***@****.***
+ud[em]
+8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5
+aud[em]
+8919d86f59f3d2e26963ef11b994ad5a4992712a3552d42014ca7966dcf02ef5
+ncudff[em]
+*******#####@*****.***
+udff[em]
+0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f
+ncudff[fn]
+*******
+udff[fn]
+f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547
+audff[em]
+0e7ad7b1523bc501713ef5ebf5023cf7513cbc6e3046ad59018c96816912730f
+audff[fn]
+f9ff4142f817bc10afd249a44c2b2f36dd7f724f55a65addc9746a2920caa547
+v
+2.9.239
+r
+stable
+a
+tmgoogletagmanager
+ec
+2
+o
+6174
+fbp
+fb.1.1755771246949.80718109354156818
+cs_est
+true
+ler
+empty
+cdl
+API_unavailable
+pmd[description]
+Testbook Referrals work when you invite your Friends with referral code & your friends join Testbook. You win Prizes & Cashback, whereas your friends get a Discount.
+pmd[contents]
+[{"name":"Testbook Referrals | More you refer, More the chances to Win","description":"Testbook Referrals work when you invite your Friends with referral code & your friends join Testbook. You win Prizes & Cashback, whereas your friends get a Discount."}]
+plt
+1864.9000000059605
+it
+1761992716280
+coo
+false
+es
+automatic
+tm
+3
+expv2[0]
+pl1
+expv2[1]
+el3
+expv2[2]
+bc1
+rqm
+formPOST
+

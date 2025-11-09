@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AR Email Automator v2.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
+  <style>
+    thead th { position: sticky; top: 0; background: #f3f4f6; z-index: 1; }
+    #progress-bar { transition: width 0.4s ease; }
+    #toast { transition: opacity 0.4s ease; }
+    .tab-btn.active { background:#111827; color:#fff; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div class="max-w-7xl mx-auto my-8 p-6 bg-white rounded-2xl shadow-xl">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+      <h1 class="text-3xl font-bold">📧 AR Email Automator v2.1</h1>
+      <div class="flex items-center gap-2">
+        <span id="runnerBadge" class="px-3 py-1 rounded-full text-sm bg-gray-200">Status: {{ runner_state.status }}</span>
+        <button id="themeToggle" class="px-3 py-1 rounded-lg bg-gray-800 text-white hover:bg-gray-700 text-sm">Theme</button>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mb-4">
+      <button class="tab-btn px-4 py-2 rounded-lg bg-gray-200" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn px-4 py-2 rounded-lg bg-gray-200" data-tab="queue">Queue</button>
+      <button class="tab-btn px-4 py-2 rounded-lg bg-gray-200" data-tab="reports">Reports</button>
+      <button class="tab-btn px-4 py-2 rounded-lg bg-gray-200" data-tab="settings">Settings</button>
+    </div>
+
+    <section id="tab-dashboard" class="tab-pane">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <button id="btnStart" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">▶ Start</button>
+        <button id="btnPause" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg">⏸ Pause</button>
+        <button id="btnResume" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">⏯ Resume</button>
+        <button id="btnStop" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">⏹ Stop</button>
+        <label class="flex items-center gap-1 ml-2 text-sm">
+          <input id="autoRestart" type="checkbox" class="w-4 h-4" {% if config.auto_restart %}checked{% endif %}> Auto-Restart
+        </label>
+        <span class="text-sm px-2 py-1 bg-gray-100 rounded">Cycle # <b id="cycleNum">{{ runner_state.cycle }}</b></span>
+        <span class="text-sm px-2 py-1 bg-gray-100 rounded">Queue: <b id="queueCount">{{ queue_count }}</b></span>
+      </div>
+
+      <div class="p-4 bg-gray-50 rounded-xl border mb-4">
+        <div class="flex justify-between text-sm mb-1">
+          <span id="progressMsg">{{ runner_state.last_message }}</span>
+          <span><b id="progressNumbers">{{ runner_state.current }}/{{ runner_state.total }}</b></span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
+          <div id="progress-bar" class="bg-green-600 h-5 text-center text-white text-xs font-semibold" style="width: 0%;">0%</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {% for status, count in status_counts.items() %}
+        <div class="p-4 rounded-xl shadow bg-gray-100 flex justify-between items-center">
+          <span class="font-semibold capitalize">{{ status }}</span>
+          <span class="text-xl font-bold">{{ count }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="max-w-md mx-auto mb-8">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </section>
+
+    <section id="tab-queue" class="tab-pane hidden">
+      <div class="mb-3 text-sm text-gray-600">Queue shows pending emails for next cycle.</div>
+      <div class="flex gap-2 mb-4">
+        <button id="refreshQueue" class="px-3 py-1 bg-gray-200 rounded">Refresh Queue Count</button>
+        <a id="exportCsvLink" class="px-3 py-1 bg-green-600 text-white rounded" href="/export_csv">Export CSV</a>
+      </div>
+      <div class="p-4 border rounded-xl bg-gray-50">
+        <div>Estimated Pending: <b id="queueCount2">{{ queue_count }}</b></div>
+      </div>
+
+      <h3 class="text-lg font-semibold mt-6 mb-2">Resend / Bulk Actions</h3>
+      <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table id="invitesTable" class="min-w-full text-sm text-left">
+          <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+            <tr>
+              <th class="py-3 px-4"><input id="selectAll" type="checkbox" class="w-4 h-4"/></th>
+              <th class="py-3 px-4">Email</th>
+              <th class="py-3 px-4">Status</th>
+              <th class="py-3 px-4">Retry</th>
+              <th class="py-3 px-4">Timestamp</th>
+              <th class="py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            {% for inv in all_invites %}
+            <tr class="hover:bg-gray-50">
+              <td class="py-2 px-4">{% if inv.status in ['failed','failed_connection','already_registered_failed'] %}<input type="checkbox" class="rowCheck w-4 h-4" data-email="{{ inv.email }}"/>{% endif %}</td>
+              <td class="py-2 px-4">{{ inv.email }}</td>
+              <td class="py-2 px-4"><span class="px-2 py-1 rounded text-white text-xs font-semibold {% if inv.status=='Sent' %}bg-green-500{% elif inv.status in ['failed','failed_connection','already_registered_failed'] %}bg-red-500{% elif inv.status=='Pending' %}bg-yellow-500{% else %}bg-gray-500{% endif %}">{{ inv.status }}</span></td>
+              <td class="py-2 px-4">{{ inv.retry_count }}</td>
+              <td class="py-2 px-4">{{ inv.timestamp }}</td>
+              <td class="py-2 px-4"><button class="resendOne px-2 py-1 text-xs bg-amber-600 text-white rounded" data-email="{{ inv.email }}">Resend</button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mt-3">
+        <select id="bulkAction" class="border rounded px-3 py-1">
+          <option value="resend">Resend</option>
+          <option value="mark_sent">Mark as Sent</option>
+          <option value="mark_failed">Mark as Failed</option>
+        </select>
+        <button id="applyBulk" class="px-3 py-1 bg-blue-600 text-white rounded">Apply to Selected</button>
+      </div>
+    </section>
+
+    <section id="tab-reports" class="tab-pane hidden">
+      <h3 class="text-xl font-semibold mb-2">Reports</h3>
+      <form action="/" method="get" class="flex flex-wrap items-center gap-2 mb-4">
+        <label>Status:</label>
+        <select name="status_filter" class="border rounded px-3 py-1">
+          <option value="all" {% if status_filter=='all' %}selected{% endif %}>All</option>
+          {% for s in status_counts.keys() %}
+          <option value="{{ s }}" {% if status_filter==s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <label>From:</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="border rounded px-3 py-1"/>
+        <label>To:</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="border rounded px-3 py-1"/>
+        <label>Items:</label>
+        <select name="per_page" class="border rounded px-3 py-1">
+          <option value="10" {% if per_page==10 %}selected{% endif %}>10</option>
+          <option value="25" {% if per_page==25 %}selected{% endif %}>25</option>
+          <option value="50" {% if per_page==50 %}selected{% endif %}>50</option>
+        </select>
+        <button class="ml-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Apply</button>
+      </form>
+
+      <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="min-w-full text-sm text-left">
+          <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+            <tr>
+              <th class="py-3 px-4">Email</th>
+              <th class="py-3 px-4">Status</th>
+              <th class="py-3 px-4">Retry</th>
+              <th class="py-3 px-4">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            {% for invite in all_invites %}
+            <tr class="hover:bg-gray-50">
+              <td class="py-2 px-4">{{ invite.email }}</td>
+              <td class="py-2 px-4">{{ invite.status }}</td>
+              <td class="py-2 px-4">{{ invite.retry_count }}</td>
+              <td class="py-2 px-4">{{ invite.timestamp }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-between items-center mt-3 text-sm">
+        {% if page > 1 %}
+        <a href="{{ url_for('index', page=page-1, per_page=per_page, status_filter=status_filter, start_date=start_date, end_date=end_date) }}" class="px-3 py-1 bg-gray-200 rounded">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="{{ url_for('index', page=page+1, per_page=per_page, status_filter=status_filter, start_date=start_date, end_date=end_date) }}" class="px-3 py-1 bg-gray-200 rounded">Next</a>
+        {% endif %}
+      </div>
+    </section>
+
+    <section id="tab-settings" class="tab-pane hidden">
+      <h3 class="text-xl font-semibold mb-3">Settings</h3>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="p-4 border rounded-xl">
+          <h4 class="font-semibold mb-2">Sending Engine</h4>
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <label>Chunk Size</label>
+            <input id="chunkSize" type="number" class="border rounded px-2 py-1" value="{{ config.chunk_size }}"/>
+            <label>Max Retries</label>
+            <input id="maxRetries" type="number" class="border rounded px-2 py-1" value="{{ config.max_retries }}"/>
+            <label>Cycle Interval (sec)</label>
+            <input id="cycleInterval" type="number" class="border rounded px-2 py-1" value="{{ config.cycle_interval_sec }}"/>
+            <label>Throttle (ms)</label>
+            <input id="throttleMs" type="number" class="border rounded px-2 py-1" value="{{ config.throttle_ms }}"/>
+            <label>Auto Restart</label>
+            <input id="autoRestart2" type="checkbox" class="w-4 h-4" {% if config.auto_restart %}checked{% endif %}/>
+          </div>
+          <button id="saveSettings" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded">Save</button>
+        </div>
+
+        <div class="p-4 border rounded-xl">
+          <h4 class="font-semibold mb-2">Telegram Notifier</h4>
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <label>Enable</label>
+            <input id="tgEnabled" type="checkbox" class="w-4 h-4" {% if config.telegram_enabled %}checked{% endif %}/>
+            <label>Bot Token</label>
+            <input id="tgToken" type="text" class="border rounded px-2 py-1" value="{{ config.telegram_bot_token }}"/>
+            <label>Chat ID</label>
+            <input id="tgChat" type="text" class="border rounded px-2 py-1" value="{{ config.telegram_chat_id }}"/>
+          </div>
+          <button id="saveTelegram" class="mt-3 px-4 py-2 bg-green-600 text-white rounded">Save Telegram</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="hidden fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg z-50 opacity-0"></div>
+
+  <script>
+    const themeToggle=document.getElementById('themeToggle');
+    themeToggle.addEventListener('click',()=>{document.body.classList.toggle('bg-gray-900');document.body.classList.toggle('text-gray-100');document.querySelectorAll('.bg-white').forEach(e=>e.classList.toggle('bg-gray-800'));});
+    const panes={dashboard:document.getElementById('tab-dashboard'),queue:document.getElementById('tab-queue'),reports:document.getElementById('tab-reports'),settings:document.getElementById('tab-settings')};
+    function showTab(n){Object.values(panes).forEach(p=>p.classList.add('hidden'));panes[n].classList.remove('hidden');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`.tab-btn[data-tab="${n}"]`).classList.add('active');localStorage.setItem('activeTab',n);}
+    document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
+    showTab(localStorage.getItem('activeTab')||'dashboard');
+    function toast(m,s=2500){const t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');t.style.opacity='1';setTimeout(()=>{t.style.opacity='0';},s-400);setTimeout(()=>t.classList.add('hidden'),s);}
+    async function postJSON(u,p){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});}
+    document.getElementById('btnStart').onclick=async()=>{await postJSON('/control',{action:'start',auto_restart:document.getElementById('autoRestart').checked});toast('Started');};
+    document.getElementById('btnPause').onclick=async()=>{await postJSON('/control',{action:'pause'});toast('Paused');};
+    document.getElementById('btnResume').onclick=async()=>{await postJSON('/control',{action:'resume'});toast('Resumed');};
+    document.getElementById('btnStop').onclick=async()=>{await postJSON('/control',{action:'stop'});toast('Stopped');};
+    document.getElementById('autoRestart').onchange=async e=>{await postJSON('/settings',{auto_restart:e.target.checked});};
+    document.getElementById('saveSettings').onclick=async()=>{const p={chunk_size:+chunkSize.value,max_retries:+maxRetries.value,cycle_interval_sec:+cycleInterval.value,throttle_ms:+throttleMs.value,auto_restart:autoRestart2.checked};const r=await postJSON('/settings',p);const j=await r.json();toast(j.ok?'Settings saved':'Error: '+j.error);};
+    document.getElementById('saveTelegram').onclick=async()=>{const p={telegram_enabled:tgEnabled.checked,telegram_bot_token:tgToken.value.trim(),telegram_chat_id:tgChat.value.trim()};const r=await postJSON('/settings',p);const j=await r.json();toast(j.ok?'Telegram settings saved':'Error: '+j.error);};
+    const socket=io(),bar=document.getElementById('progress-bar'),msg=document.getElementById('progressMsg'),nums=document.getElementById('progressNumbers'),badge=document.getElementById('runnerBadge'),cycleNum=document.getElementById('cycleNum');
+    socket.on('progress_update',d=>{if(d.status)badge.textContent='Status: '+d.status;if(typeof d.current!='undefined'){const pct=d.total?(d.current/d.total*100):0;bar.style.width=pct.toFixed(0)+'%';bar.textContent=pct.toFixed(0)+'%';nums.textContent=(d.current||0)+'/'+(d.total||0);}if(d.last_message)msg.textContent=d.last_message;if(d.cycle)cycleNum.textContent=d.cycle;if(d.type==='cycle_end')toast('Cycle finished');if(d.type==='stopped')toast('Runner stopped');});
+    document.getElementById('refreshQueue').onclick=()=>window.location.reload();
+    document.querySelectorAll('.resendOne').forEach(b=>b.addEventListener('click',async()=>{const e=b.dataset.email;const r=await fetch('/resend?email='+encodeURIComponent(e),{method:'POST'});const j=await r.json();toast(j.ok?'Queued resend for '+e:'Error');}));
+    const selectAll=document.getElementById('selectAll');if(selectAll)selectAll.addEventListener('change',()=>{document.querySelectorAll('.rowCheck').forEach(c=>c.checked=selectAll.checked);});
+    document.getElementById('applyBulk').onclick=async()=>{const a=bulkAction.value,emails=[...document.querySelectorAll('.rowCheck:checked')].map(c=>c.dataset.email);if(!emails.length)return toast('Select at least one email');const r=await postJSON('/bulk_action',{action:a,emails});const j=await r.json();toast(j.ok?`Applied ${a} to ${j.count}`:'Error');setTimeout(()=>window.location.reload(),1000);};
+    const ctx=document.getElementById('statusChart').getContext('2d');new Chart(ctx,{type:'pie',data:{labels:[{% for s in status_counts.keys() %}'{{ s }}',{% endfor %}],datasets:[{data:[{% for c in status_counts.values() %}{{ c }},{% endfor %}],backgroundColor:['#22c55e','#facc15','#ef4444','#3b82f6','#9ca3af']}]}});
+  </script>
+</body>
+</html>
