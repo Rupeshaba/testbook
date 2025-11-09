@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AR Email Automator v2.1</title>
+  <title>AR Email Automator v2.1 (AJAX)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
   <style>
     thead th { position: sticky; top: 0; background: #f3f4f6; z-index: 1; }
     #progress-bar { transition: width 0.4s ease; }
@@ -219,21 +218,37 @@
     document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
     showTab(localStorage.getItem('activeTab')||'dashboard');
     function toast(m,s=2500){const t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');t.style.opacity='1';setTimeout(()=>{t.style.opacity='0';},s-400);setTimeout(()=>t.classList.add('hidden'),s);}
+
     async function postJSON(u,p){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});}
     document.getElementById('btnStart').onclick=async()=>{await postJSON('/control',{action:'start',auto_restart:document.getElementById('autoRestart').checked});toast('Started');};
     document.getElementById('btnPause').onclick=async()=>{await postJSON('/control',{action:'pause'});toast('Paused');};
     document.getElementById('btnResume').onclick=async()=>{await postJSON('/control',{action:'resume'});toast('Resumed');};
     document.getElementById('btnStop').onclick=async()=>{await postJSON('/control',{action:'stop'});toast('Stopped');};
     document.getElementById('autoRestart').onchange=async e=>{await postJSON('/settings',{auto_restart:e.target.checked});};
+
     document.getElementById('saveSettings').onclick=async()=>{const p={chunk_size:+chunkSize.value,max_retries:+maxRetries.value,cycle_interval_sec:+cycleInterval.value,throttle_ms:+throttleMs.value,auto_restart:autoRestart2.checked};const r=await postJSON('/settings',p);const j=await r.json();toast(j.ok?'Settings saved':'Error: '+j.error);};
     document.getElementById('saveTelegram').onclick=async()=>{const p={telegram_enabled:tgEnabled.checked,telegram_bot_token:tgToken.value.trim(),telegram_chat_id:tgChat.value.trim()};const r=await postJSON('/settings',p);const j=await r.json();toast(j.ok?'Telegram settings saved':'Error: '+j.error);};
-    const socket=io(),bar=document.getElementById('progress-bar'),msg=document.getElementById('progressMsg'),nums=document.getElementById('progressNumbers'),badge=document.getElementById('runnerBadge'),cycleNum=document.getElementById('cycleNum');
-    socket.on('progress_update',d=>{if(d.status)badge.textContent='Status: '+d.status;if(typeof d.current!='undefined'){const pct=d.total?(d.current/d.total*100):0;bar.style.width=pct.toFixed(0)+'%';bar.textContent=pct.toFixed(0)+'%';nums.textContent=(d.current||0)+'/'+(d.total||0);}if(d.last_message)msg.textContent=d.last_message;if(d.cycle)cycleNum.textContent=d.cycle;if(d.type==='cycle_end')toast('Cycle finished');if(d.type==='stopped')toast('Runner stopped');});
+
+    async function pollRunner(){
+      try{
+        const res=await fetch('/runner_state'); const d=await res.json();
+        const badge=document.getElementById('runnerBadge'); badge.textContent='Status: '+d.status;
+        const bar=document.getElementById('progress-bar'); const pct=d.total?(d.current/d.total*100):0; bar.style.width=(pct|0)+'%'; bar.textContent=(pct|0)+'%';
+        document.getElementById('progressMsg').textContent=d.last_message||'';
+        document.getElementById('progressNumbers').textContent=(d.current||0)+'/'+(d.total||0);
+        document.getElementById('cycleNum').textContent=d.cycle||0;
+      }catch(e){}
+    }
+    setInterval(pollRunner, 2000);
+    pollRunner();
+
     document.getElementById('refreshQueue').onclick=()=>window.location.reload();
     document.querySelectorAll('.resendOne').forEach(b=>b.addEventListener('click',async()=>{const e=b.dataset.email;const r=await fetch('/resend?email='+encodeURIComponent(e),{method:'POST'});const j=await r.json();toast(j.ok?'Queued resend for '+e:'Error');}));
     const selectAll=document.getElementById('selectAll');if(selectAll)selectAll.addEventListener('change',()=>{document.querySelectorAll('.rowCheck').forEach(c=>c.checked=selectAll.checked);});
-    document.getElementById('applyBulk').onclick=async()=>{const a=bulkAction.value,emails=[...document.querySelectorAll('.rowCheck:checked')].map(c=>c.dataset.email);if(!emails.length)return toast('Select at least one email');const r=await postJSON('/bulk_action',{action:a,emails});const j=await r.json();toast(j.ok?`Applied ${a} to ${j.count}`:'Error');setTimeout(()=>window.location.reload(),1000);};
-    const ctx=document.getElementById('statusChart').getContext('2d');new Chart(ctx,{type:'pie',data:{labels:[{% for s in status_counts.keys() %}'{{ s }}',{% endfor %}],datasets:[{data:[{% for c in status_counts.values() %}{{ c }},{% endfor %}],backgroundColor:['#22c55e','#facc15','#ef4444','#3b82f6','#9ca3af']}]}});
+    document.getElementById('applyBulk').onclick=async()=>{const a=bulkAction.value,emails=[...document.querySelectorAll('.rowCheck:checked')].map(c=>c.dataset.email);if(!emails.length)return toast('Select at least one email');const r=await postJSON('/bulk_action',{action:a,emails});const j=await r.json();toast(j.ok?`Applied ${a} to ${j.count}`:'Error');setTimeout(()=>window.location.reload(),800);};
+
+    const ctx=document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx,{type:'pie',data:{labels:[{% for s in status_counts.keys() %}'{{ s }}',{% endfor %}],datasets:[{data:[{% for c in status_counts.values() %}{{ c }},{% endfor %}],backgroundColor:['#22c55e','#facc15','#ef4444','#3b82f6','#9ca3af']}]}});
   </script>
 </body>
 </html>
