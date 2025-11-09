@@ -1,40 +1,45 @@
+import os
 import json
-import requests
 import re
 import sqlite3
-from flask import Flask, render_template, request, jsonify, Response
 import threading
 import time
 from datetime import datetime, timedelta
 from io import StringIO
-from flask_socketio import SocketIO
-import os
+
+import requests
+from flask import Flask, render_template, request, jsonify, Response
+
+# Optional: ijson for true streaming of large JSON arrays
+try:
+    import ijson
+    HAVE_IJSON = True
+except Exception:
+    HAVE_IJSON = False
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'change-this'
-socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ------------------ Globals ------------------
-task_progress = {}
+# ------------------ Runner State (AJAX polled) ------------------
 runner_lock = threading.Lock()
 stop_event = threading.Event()
 
 runner_state = {
-    "status": "stopped",         # stopped | running | paused
+    "status": "stopped",   # stopped | running | paused
     "cycle": 0,
     "last_message": "",
     "current": 0,
     "total": 0,
     "started_at": None,
-    "finished_at": None
+    "finished_at": None,
 }
 
 DEFAULT_CONFIG = {
-    "chunk_size": 500,
+    "chunk_size": 100,           # small chunks to keep RAM low
     "max_retries": 2,
-    "cycle_interval_sec": 300,   # 5 min
+    "cycle_interval_sec": 300,   # 5 min between cycles
     "auto_restart": True,
-    "throttle_ms": 100,
+    "throttle_ms": 50,           # small delay per chunk
     # Telegram
     "telegram_enabled": False,
     "telegram_bot_token": "",
@@ -43,7 +48,14 @@ DEFAULT_CONFIG = {
 
 # ------------------ DB Helpers ------------------
 def db_conn():
-    return sqlite3.connect('invites.db', check_same_thread=False)
+    conn = sqlite3.connect('invites.db', check_same_thread=False)
+    # Memory & speed friendly settings
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=OFF;")
+    except Exception:
+        pass
+    return conn
 
 def setup_database():
     conn = db_conn()
@@ -96,7 +108,6 @@ def telegram_enabled(cfg=None):
     return bool(cfg.get("telegram_enabled")) and bool(cfg.get("telegram_bot_token")) and bool(cfg.get("telegram_chat_id"))
 
 def send_telegram_message(text, cfg=None):
-    """Fire-and-forget Telegram notify; ignores errors (safe for background)."""
     cfg = cfg or get_config()
     if not telegram_enabled(cfg):
         return
@@ -108,53 +119,25 @@ def send_telegram_message(text, cfg=None):
             "parse_mode": "HTML",
             "disable_web_page_preview": True
         }
-        # short timeout so it never blocks the loop
         requests.post(url, json=payload, timeout=10)
     except Exception:
-        pass  # swallow any network/format issues silently
+        pass
 
 def notify_cycle_start():
-    cfg = get_config()
-    if not telegram_enabled(cfg): return
-    msg = f"▶️ <b>Cycle #{runner_state['cycle']}</b> started\n" \
-          f"⏳ Total planned: <b>{runner_state.get('total',0)}</b>\n" \
-          f"🕒 {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
-    send_telegram_message(msg, cfg)
+    if not telegram_enabled(): return
+    msg = f"▶️ <b>Cycle #{runner_state['cycle']}</b> started\n⏳ Planned: <b>{runner_state.get('total',0)}</b>\n🕒 {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    send_telegram_message(msg)
 
 def notify_cycle_end():
-    cfg = get_config()
-    if not telegram_enabled(cfg): return
-    msg = f"✅ <b>Cycle #{runner_state['cycle']}</b> finished\n" \
-          f"📦 Processed: <b>{runner_state.get('current',0)}/{runner_state.get('total',0)}</b>\n" \
-          f"🕒 {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
-    send_telegram_message(msg, cfg)
+    if not telegram_enabled(): return
+    msg = f"✅ <b>Cycle #{runner_state['cycle']}</b> finished\n📦 Processed: <b>{runner_state.get('current',0)}/{runner_state.get('total',0)}</b>\n🕒 {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    send_telegram_message(msg)
 
 def notify_error(err_text):
-    cfg = get_config()
-    if not telegram_enabled(cfg): return
-    send_telegram_message(f"❌ <b>Error</b>: {err_text}", cfg)
+    if not telegram_enabled(): return
+    send_telegram_message(f"❌ <b>Error</b>: {err_text}")
 
-# ------------------ Invite Logging ------------------
-def log_invite_status(conn, email, status):
-    cur = conn.cursor()
-    if status in ('failed', 'failed_connection', 'already_registered_failed'):
-        cur.execute("SELECT retry_count FROM invites WHERE email = ?", (email,))
-        row = cur.fetchone()
-        retry_count = (row[0] + 1) if row else 1
-        cur.execute('''
-            INSERT INTO invites (email, status, retry_count, timestamp)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(email) DO UPDATE SET status = ?, retry_count = ?, timestamp = CURRENT_TIMESTAMP
-        ''', (email, status, retry_count, status, retry_count))
-    else:
-        cur.execute('''
-            INSERT INTO invites (email, status, retry_count, timestamp)
-            VALUES (?, ?, COALESCE((SELECT retry_count FROM invites WHERE email=?),0), CURRENT_TIMESTAMP)
-            ON CONFLICT(email) DO UPDATE SET status = ?, timestamp = CURRENT_TIMESTAMP
-        ''', (email, status, email, status))
-    conn.commit()
-
-# ------------------ Request Parsing / Emails ------------------
+# ------------------ Request Parsing / Email Streaming ------------------
 def parse_requests(filename="requests.txt"):
     with open(filename, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -178,35 +161,78 @@ def parse_requests(filename="requests.txt"):
                 payload[key.strip()] = value.strip()
     return {"url": url, "headers": headers, "payload_template": payload}
 
-def load_all_emails(filename="emails.json"):
-    with open(filename, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    out = []
-    for item in data:
-        if isinstance(item, str):
-            out.append({"email": item})
-        elif isinstance(item, dict) and 'email' in item:
-            out.append({"email": item['email']})
-    return out
+def stream_emails_json(filename="emails.json"):
+    if HAVE_IJSON:
+        with open(filename, 'r', encoding='utf-8') as f:
+            for item in ijson.items(f, 'item'):
+                if isinstance(item, str):
+                    yield {"email": item}
+                elif isinstance(item, dict) and 'email' in item:
+                    yield {"email": item['email']}
+    else:
+        # Fallback: try to load small file; if large, fallback to line-by-line JSONL
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            for item in data:
+                if isinstance(item, str):
+                    yield {"email": item}
+                elif isinstance(item, dict) and 'email' in item:
+                    yield {"email": item['email']}
+        except Exception:
+            # JSONL fallback: one JSON object per line or a raw email per line
+            with open(filename, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                        if isinstance(obj, str):
+                            yield {"email": obj}
+                        elif isinstance(obj, dict) and 'email' in obj:
+                            yield {"email": obj['email']}
+                    except Exception:
+                        yield {"email": line.strip('" ')}
 
-def get_emails_to_process(conn, all_emails, max_retries):
+def chunked(iterable, size):
+    chunk = []
+    for item in iterable:
+        chunk.append(item)
+        if len(chunk) >= size:
+            yield chunk
+            chunk = []
+    if chunk:
+        yield chunk
+
+# ------------------ Invite Logging & Decisions ------------------
+def log_invite_status(conn, email, status):
     cur = conn.cursor()
-    cur.execute("SELECT email, status, retry_count FROM invites")
-    db_emails = {r[0]: {'status': r[1], 'retry_count': r[2]} for r in cur.fetchall()}
+    if status in ('failed', 'failed_connection', 'already_registered_failed'):
+        cur.execute("SELECT retry_count FROM invites WHERE email = ?", (email,))
+        row = cur.fetchone()
+        retry_count = (row[0] + 1) if row else 1
+        cur.execute('''
+            INSERT INTO invites (email, status, retry_count, timestamp)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(email) DO UPDATE SET status = ?, retry_count = ?, timestamp = CURRENT_TIMESTAMP
+        ''', (email, status, retry_count, status, retry_count))
+    else:
+        cur.execute('''
+            INSERT INTO invites (email, status, retry_count, timestamp)
+            VALUES (?, ?, COALESCE((SELECT retry_count FROM invites WHERE email=?),0), CURRENT_TIMESTAMP)
+            ON CONFLICT(email) DO UPDATE SET status = ?, timestamp = CURRENT_TIMESTAMP
+        ''', (email, status, email, status))
+    conn.commit()
 
-    todo = []
-    for item in all_emails:
-        email = item.get('email')
-        if not email:
-            continue
-        if email not in db_emails:
-            todo.append(item)
-        else:
-            st = db_emails[email]['status']
-            rc = db_emails[email]['retry_count'] or 0
-            if st in ('failed', 'failed_connection') and rc < max_retries:
-                todo.append(item)
-    return todo
+def should_send_email(conn, email, max_retries):
+    cur = conn.cursor()
+    cur.execute("SELECT status, retry_count FROM invites WHERE email = ?", (email,))
+    row = cur.fetchone()
+    if not row:
+        return True
+    status, rc = row[0], row[1] or 0
+    return (status in ('failed', 'failed_connection')) and (rc < max_retries)
 
 def send_invites_chunk(conn, request_info, email_data):
     url = request_info['url']
@@ -214,7 +240,6 @@ def send_invites_chunk(conn, request_info, email_data):
     emails = [e['email'] for e in email_data if 'email' in e]
     if not emails:
         return
-
     cleaned_headers = {
         'accept': headers.get('accept'),
         'accept-language': headers.get('accept-language'),
@@ -230,12 +255,10 @@ def send_invites_chunk(conn, request_info, email_data):
         'source': headers.get('source'),
         'user-agent': headers.get('user-agent'),
     }
-
     try:
-        resp = requests.post(url, headers={k:v for k,v in cleaned_headers.items() if v}, json={"emails": emails}, timeout=30)
-        status_code = resp.status_code
-        ok = (status_code == 200)
-        text = resp.text.lower()
+        resp = requests.post(url, headers={k: v for k, v in cleaned_headers.items() if v}, json={"emails": emails}, timeout=30)
+        ok = (resp.status_code == 200)
+        text = (resp.text or "").lower()
         already_phrase = ("already registered" in text) or ("already_registered" in text)
         for email in emails:
             if ok:
@@ -245,11 +268,26 @@ def send_invites_chunk(conn, request_info, email_data):
                     log_invite_status(conn, email, 'already_registered_failed')
                 else:
                     log_invite_status(conn, email, 'failed')
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         for email in emails:
             log_invite_status(conn, email, 'failed_connection')
 
-# ------------------ Background Loop ------------------
+# ------------------ Background Auto Loop (Memory-safe) ------------------
+def estimate_total_to_send(conn, max_retries, filename="emails.json"):
+    total = 0
+    for item in stream_emails_json(filename):
+        email = item.get('email')
+        if not email:
+            continue
+        if should_send_email(conn, email, max_retries) or is_new_email(conn, email):
+            total += 1
+    return total
+
+def is_new_email(conn, email):
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM invites WHERE email = ?", (email,))
+    return cur.fetchone() is None
+
 def background_loop():
     while not stop_event.is_set():
         if runner_state['status'] == 'paused':
@@ -265,49 +303,61 @@ def background_loop():
         conn = db_conn()
         try:
             request_info = parse_requests("requests.txt")
-            all_emails = load_all_emails("emails.json")
-            todo = get_emails_to_process(conn, all_emails, max_retries)
-            total = len(todo)
 
             with runner_lock:
-                runner_state.update({
-                    "cycle": runner_state['cycle'] + 1,
-                    "current": 0,
-                    "total": total,
-                    "started_at": datetime.utcnow().isoformat(),
-                    "finished_at": None,
-                    "last_message": f"Starting cycle #{runner_state['cycle']}"
-                })
-            socketio.emit('progress_update', {"type":"cycle_start", **runner_state})
+                runner_state['cycle'] += 1
+                runner_state['current'] = 0
+                runner_state['total'] = 0
+                runner_state['started_at'] = datetime.utcnow().isoformat()
+                runner_state['finished_at'] = None
+                runner_state['last_message'] = f"Counting eligible emails…"
+            try:
+                total = estimate_total_to_send(conn, max_retries, "emails.json")
+            except Exception as e:
+                total = 0
+            with runner_lock:
+                runner_state['total'] = total
+                runner_state['last_message'] = f"Starting cycle #{runner_state['cycle']}"
+
             notify_cycle_start()
 
             if total == 0:
                 with runner_lock:
                     runner_state['last_message'] = "No emails to process (all done or retries exhausted)."
-                socketio.emit('progress_update', {"type":"idle", **runner_state})
+                    runner_state['finished_at'] = datetime.utcnow().isoformat()
+                notify_cycle_end()
             else:
-                for i in range(0, total, chunk_size):
+                buffer = []
+                for item in stream_emails_json("emails.json"):
                     if stop_event.is_set() or runner_state['status'] != 'running':
                         break
-                    chunk = todo[i:i+chunk_size]
-                    send_invites_chunk(conn, request_info, chunk)
+                    email = item.get('email')
+                    if not email:
+                        continue
+                    if is_new_email(conn, email) or should_send_email(conn, email, max_retries):
+                        buffer.append({"email": email})
+                        if len(buffer) >= chunk_size:
+                            send_invites_chunk(conn, request_info, buffer)
+                            with runner_lock:
+                                runner_state['current'] = min(runner_state['total'] or 0, runner_state['current'] + len(buffer))
+                                runner_state['last_message'] = f"Processed {runner_state['current']}/{runner_state['total']}"
+                            buffer = []
+                            time.sleep(throttle_ms / 1000.0)
+                if buffer and runner_state['status'] == 'running' and not stop_event.is_set():
+                    send_invites_chunk(conn, request_info, buffer)
                     with runner_lock:
-                        runner_state['current'] = min(total, runner_state['current'] + len(chunk))
-                        runner_state['last_message'] = f"Processed {runner_state['current']}/{total}"
-                    socketio.emit('progress_update', {"type":"progress", **runner_state})
-                    time.sleep(throttle_ms/1000.0)
+                        runner_state['current'] = min(runner_state['total'] or 0, runner_state['current'] + len(buffer))
+                        runner_state['last_message'] = f"Processed {runner_state['current']}/{runner_state['total']}"
 
-            with runner_lock:
-                runner_state['finished_at'] = datetime.utcnow().isoformat()
-                runner_state['last_message'] = "Cycle finished."
-            socketio.emit('progress_update', {"type":"cycle_end", **runner_state})
-            notify_cycle_end()
+                with runner_lock:
+                    runner_state['finished_at'] = datetime.utcnow().isoformat()
+                    runner_state['last_message'] = "Cycle finished."
+                notify_cycle_end()
 
         except Exception as e:
             err = f"{type(e).__name__}: {e}"
             with runner_lock:
                 runner_state['last_message'] = f"Error in loop: {err}"
-            socketio.emit('progress_update', {"type":"error", "message": err, **runner_state})
             notify_error(err)
         finally:
             conn.close()
@@ -315,36 +365,26 @@ def background_loop():
         cfg = get_config()
         if cfg.get('auto_restart', True) and runner_state['status'] == 'running' and not stop_event.is_set():
             secs = int(cfg.get('cycle_interval_sec', 300))
-            for _ in range(secs * 10):
-                if stop_event.is_set() or runner_state['status'] != 'running':
-                    break
+            waited = 0
+            while waited < secs and not stop_event.is_set() and runner_state['status'] == 'running':
                 with runner_lock:
-                    runner_state['last_message'] = f"Waiting {secs}s for next cycle…"
-                socketio.emit('progress_update', {"type":"waiting", **runner_state})
-                time.sleep(0.1)
+                    runner_state['last_message'] = f"Waiting {secs - waited}s for next cycle…"
+                time.sleep(1)
+                waited += 1
         else:
             with runner_lock:
                 if runner_state['status'] == 'running':
                     runner_state['status'] = 'stopped'
-            socketio.emit('progress_update', {"type":"stopped", **runner_state})
 
+# Start background supervisor
 threading.Thread(target=background_loop, daemon=True).start()
 
-# ------------------ Legacy endpoints (kept) ------------------
-@app.route('/send_invites', methods=['POST'])
-def handle_send_invites():
-    save_config({"auto_restart": False})
+# ------------------ Routes: Control / Settings / Poll / Actions / Export ------------------
+@app.route('/runner_state')
+def get_runner_state():
     with runner_lock:
-        runner_state['status'] = 'running'
-    return jsonify({"task_id": "socketio-live", "message": "Manual run started."})
+        return jsonify(runner_state)
 
-@app.route('/progress/<task_id>')
-def get_progress(task_id):
-    info = task_progress.get(task_id, {'total': runner_state['total'], 'current': runner_state['current'],
-                                       'status': runner_state['status'], 'message': runner_state['last_message']})
-    return jsonify(info)
-
-# ------------------ Control & Settings ------------------
 @app.route('/control', methods=['POST'])
 def control():
     data = request.get_json(silent=True) or {}
@@ -362,7 +402,6 @@ def control():
             runner_state['status'] = 'stopped'
         else:
             return jsonify({"ok": False, "error": "Unknown action"}), 400
-    socketio.emit('progress_update', {"type":"control", "action": action, **runner_state})
     return jsonify({"ok": True, "state": runner_state})
 
 @app.route('/settings', methods=['POST'])
@@ -379,7 +418,6 @@ def update_settings():
     save_config(data)
     return jsonify({"ok": True, "config": get_config()})
 
-# ------------------ Actions ------------------
 @app.route('/resend', methods=['POST'])
 def resend_one():
     email = request.args.get('email')
@@ -397,7 +435,6 @@ def resend_one():
     ''', (email, rc, rc))
     conn.commit()
     conn.close()
-    socketio.emit('progress_update', {"type":"resend", "email": email})
     return jsonify({"ok": True})
 
 @app.route('/bulk_action', methods=['POST'])
@@ -439,10 +476,8 @@ def bulk_action():
             ''', (e, rc, rc))
     conn.commit()
     conn.close()
-    socketio.emit('progress_update', {"type":"bulk", "action": action, "count": len(emails)})
     return jsonify({"ok": True, "count": len(emails)})
 
-# ------------------ Export CSV ------------------
 @app.route('/export_csv')
 def export_csv():
     status_filter = request.args.get('status_filter', 'all')
@@ -475,11 +510,12 @@ def export_csv():
                     mimetype='text/csv',
                     headers={"Content-Disposition": "attachment;filename=invite_report.csv"})
 
-# ------------------ View ------------------
+# ------------------ Index / Reports ------------------
 @app.route('/')
 def index():
     conn = db_conn()
     cur = conn.cursor()
+
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 25, type=int)
     status_filter = request.args.get('status_filter', 'all')
@@ -528,10 +564,17 @@ def index():
     total_pages = (total_invites + per_page - 1)//per_page
 
     cfg = get_config()
+    # Lightweight queue estimate by streaming once
     try:
-        all_emails = load_all_emails("emails.json")
-        pending = get_emails_to_process(db_conn(), all_emails, int(cfg['max_retries']))
-        queue_count = len(pending)
+        queue_count = 0
+        for item in stream_emails_json("emails.json"):
+            email = item.get('email')
+            if not email:
+                continue
+            if is_new_email(conn, email) or should_send_email(conn, email, int(cfg['max_retries'])):
+                queue_count += 1
+                if queue_count >= 1000000:  # hard safety cap to avoid very long scans
+                    break
     except Exception:
         queue_count = 0
 
@@ -552,16 +595,11 @@ def index():
         queue_count=queue_count
     )
 
+# ------------------ Entry ------------------
 if __name__ == "__main__":
     setup_database()
-    # Allow running in production (Render / Replit / Railway)
-    socketio.run(
-        app,
+    app.run(
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 5000)),
-        debug=False,
-        allow_unsafe_werkzeug=True
+        debug=False
     )
-
-
-
