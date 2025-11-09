@@ -553,4 +553,13 @@ def index():
 
 if __name__ == "__main__":
     setup_database()
-    socketio.run(app, debug=True)
+    # Allow running in production (Render / Replit / Railway)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=False,
+        allow_unsafe_werkzeug=True
+    )
+
+
