@@ -41,9 +41,9 @@ DEFAULT_CONFIG = {
     "auto_restart": True,
     "throttle_ms": 50,           # small delay per chunk
     # Telegram
-    "telegram_enabled": False,
-    "telegram_bot_token": "",
-    "telegram_chat_id": ""
+    "telegram_enabled": True,
+    "telegram_bot_token": "8127422854:AAG7slAq62Vm7KSiN5PNO7CnusuNoHUSVfo",
+    "telegram_chat_id": "1248118664"
 }
 
 # ------------------ DB Helpers ------------------
@@ -603,3 +603,4 @@ if __name__ == "__main__":
         port=int(os.environ.get("PORT", 5000)),
         debug=False
     )
+
